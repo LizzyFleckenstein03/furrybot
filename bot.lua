@@ -86,7 +86,7 @@ function furrybot.http_request(url, name, callback)
 		if res.succeeded then
 			callback(res.data)
 		else
-			furrybot.ping_player_error(name, "Request failed with code", res.code)
+			furrybot.error_message(name, "Request failed with code", res.code)
 		end
 	end)
 end
