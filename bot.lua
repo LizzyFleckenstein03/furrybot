@@ -72,8 +72,9 @@ function furrybot.http_request(url, name, callback)
 end
 
 function furrybot.json_http_request(url, name, callback)
-	furrybot.http_request(url, name, function(data)
-		callback(minetest.parse_json(data)[1])
+	furrybot.http_request(url, name, function(raw)
+		local data = minetest.parse_json(raw)
+		callback(data[1] or data)
 	end)
 end
 
@@ -208,6 +209,17 @@ function furrybot.commands.cocksize(name, target)
 end
 
 furrybot.commands.dicksize = furrybot.commands.cocksize
+
+function furrybot.commands.joke(name, first, last)
+	if not first then
+		first = "Chuck"
+		last = "Norris"
+	end
+	furrybot.json_http_request("http://api.icndb.com/jokes/random?firstName=" .. first .. "&lastName=" .. (last or ""), name, function(data)
+		local joke = data.value.joke:gsub("&quot;", "\""):gsub("  ", " ")
+		furrybot.send(joke)
+	end)
+end
 
 if furrybot.loaded then
 	furrybot.send("Reloaded")
