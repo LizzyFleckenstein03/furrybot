@@ -1,7 +1,6 @@
 furrybot.commands = {}
 
 local C = minetest.get_color_escape_sequence
-local http = minetest.get_http_api()
 
 function furrybot.send(msg, color)
 	minetest.send_chat_message("/me " .. C("#00FF3C") .. "[" .. C(color or "#FFFA00") .. msg .. C("#00FF3C") .. "]")
@@ -35,6 +34,10 @@ function furrybot.check_online(name, target)
 	else
 		furrybot.ping_player_error(name, "Player not online", target)
 	end
+end
+
+function furrybot.choose(list)
+	return list[math.random(#list)]
 end
 
 function furrybot.recieve(msg)
@@ -123,13 +126,22 @@ function furrybot.commands.verse(name)
 	local req = {
 		url = "https://labs.bible.org/api/?type=json&passage=random",
 	}
-	local res = http.fetch_sync(req)
-	if res.succeeded then
-		local data = minetest.parse_json(res.data)[1]
-		furrybot.send(data.text .. C("#00FFC3") .. "[" .. data.bookname .. " " .. data.chapter .. "," .. data.verse .. "]")
-	else
-		furrybot.ping_player_error(name, "Request failed with code", res.code)
-	end
+	local res = furrybot.http.fetch(req, function(res)
+		if res.succeeded then
+			local data = minetest.parse_json(res.data)[1]
+			furrybot.send(data.text .. C("#00FFC3") .. "[" .. data.bookname .. " " .. data.chapter .. "," .. data.verse .. "]")
+		else
+			furrybot.ping_player_error(name, "Request failed with code", res.code)
+		end
+	end)
+end
+
+function furrybot.commands.rolldice(name)
+	furrybot.ping_player(name, "rolled a dice and got a " .. C("#AAFF43") .. math.random(6))
+end
+
+function furrybot.commands.coinflip(name)
+	furrybot.ping_player(name, "flipped a coin and got " .. C("#AAFF43") .. furrybot.choose({"Heads", "Tails"}))
 end
 
 if furrybot.loaded then
