@@ -13,6 +13,7 @@ furrybot.colors = {
 	info = C("#00FFC3"),
 	fun = C("#A0FF24"),
 	random = C("#A300BE"),
+	money = C("#A11600"),
 }
 
 -- helper functions
@@ -134,6 +135,43 @@ function furrybot.request_command(on_request, on_accept)
 	end
 end
 
+function furrybot.money_key(name)
+	return name .. ".money"
+end
+
+function furrybot.get_money(name)
+	local key = furrybot.money_key(name)
+	if furrybot.storage:contains(key) then
+		return furrybot.storage:get_int(key)
+	else
+		return 100
+	end
+end
+
+function furrybot.set_money(name, money)
+	furrybot.storage:set_int(furrybot.money_key(name), money)
+end
+
+function furrybot.add_money(name, add)
+	local money = furrybot.get_money(name)
+	furrybot.set_money(name, money + add)
+end
+
+function furrybot.take_money(name, remove)
+	local money = furrybot.get_money(name)
+	local new = money - remove
+	if new < 0 then
+		return false
+	else
+		furrybot.set_money(name, new)
+		return true
+	end
+end
+
+function furrybot.money(money, color)
+	return furrybot.colors.money .. "$" .. money .. color
+end
+
 -- Commands
 
 -- system
@@ -177,8 +215,8 @@ furrybot.commands.hug = furrybot.simple_rpg_command("hugs")
 furrybot.commands.cuddle = furrybot.simple_rpg_command("cuddles")
 furrybot.commands.kiss = furrybot.simple_rpg_command("kisses")
 furrybot.commands.hit = furrybot.simple_rpg_command("hits")
-furrybot.commands.slap = furrybot.simple_rpg_command("slap")
-furrybot.commands.beat = furrybot.simple_rpg_command("beat")
+furrybot.commands.slap = furrybot.simple_rpg_command("slaps")
+furrybot.commands.beat = furrybot.simple_rpg_command("beats")
 
 furrybot.commands.sex = furrybot.request_command(function(name, target)
 	furrybot.ping_message(target, name .. " wants to have sex with you. Type !accept to accept or !deny to deny.", furrybot.colors.system)
@@ -260,7 +298,32 @@ function furrybot.commands.joke(name, first, last)
 	end)
 end
 
--- send reload message
+-- economy
+function furrybot.commands.money(name, target)
+	target = target or name
+	furrybot.ping_message(name, (target == name and "You have " or target .. " has ") .. furrybot.money(furrybot.get_money(target), furrybot.colors.system) .. ".", furrybot.colors.system)
+end
+furrybot.commands.balance = furrybot.commands.money
+
+function furrybot.commands.pay(name, target, number)
+	if furrybot.online_or_error(name, target) then
+		local money = tonumber(number or "")
+		if not money or money <= 0 or math.floor(money) ~= money then
+			furrybot.error_message(name, "Invalid amount of money")
+		else
+			if furrybot.take_money(name, money) then
+				furrybot.add_money(target, money)
+				furrybot.ping_message(target, name .. " has payed you " .. furrybot.money(money, furrybot.colors.system) .. ".", furrybot.colors.system)
+			else
+				furrybot.error_message(name, "You don't have enough money")
+			end
+		end
+	end
+end
+
+-- send load message
+furrybot.send("FurryBot - " .. C("#170089") .. "https://github.com/EliasFleckenstein03/furrybot", furrybot.colors.system)
+
 if furrybot.loaded then
 	furrybot.send("Reloaded", furrybot.colors.system)
 else
