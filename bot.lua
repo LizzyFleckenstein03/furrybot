@@ -40,6 +40,17 @@ function furrybot.choose(list)
 	return list[math.random(#list)]
 end
 
+function furrybot.http_request(url, name, callback)
+	furrybot.http.fetch({url = url}, function(res)
+		if res.succeeded then
+			local data = minetest.parse_json(res.data)[1]
+			callback(data)
+		else
+			furrybot.ping_player_error(name, "Request failed with code", res.code)
+		end
+	end)
+end
+
 function furrybot.recieve(msg)
 	msg = minetest.strip_colors(msg)
 	if msg:find("<") == 1 then
@@ -123,17 +134,26 @@ function furrybot.commands.help()
 end
 
 function furrybot.commands.verse(name)
-	local req = {
-		url = "https://labs.bible.org/api/?type=json&passage=random",
-	}
-	local res = furrybot.http.fetch(req, function(res)
-		if res.succeeded then
-			local data = minetest.parse_json(res.data)[1]
-			furrybot.send(data.text .. C("#00FFC3") .. "[" .. data.bookname .. " " .. data.chapter .. "," .. data.verse .. "]")
-		else
-			furrybot.ping_player_error(name, "Request failed with code", res.code)
-		end
+	furrybot.http_request("https://labs.bible.org/api/?type=json&passage=random", name, function(data)
+		furrybot.send(data.text .. C("#00FFC3") .. "[" .. data.bookname .. " " .. data.chapter .. "," .. data.verse .. "]")
 	end)
+end
+
+function furrybot.commands.define(name, word)
+	if word then
+		furrybot.http_request("https://api.dictionaryapi.dev/api/v1/entries/en_US/" .. word, name, function(data)
+			local meaning = data.meaning
+			local selected = meaning.exclamation or meaning.noun or meaning.verb or meaning["transitive verb"] or meaning.adverb or meaning["relative adverb"]
+			if not selected then
+				print(dump(meaning))
+				furrybot.ping_player_error(name, "Error in parsing response")
+			else
+				furrybot.send(C("#00FFC3") .. word:sub(1, 1):upper() .. word:sub(2, #word):lower() .. ": " .. C("#FFFA00") .. selected[1].definition)
+			end
+		end)
+	else
+		furrybot.ping_player_error(name, "You need to specify a word")
+	end
 end
 
 function furrybot.commands.rolldice(name)
@@ -142,6 +162,12 @@ end
 
 function furrybot.commands.coinflip(name)
 	furrybot.ping_player(name, "flipped a coin and got " .. C("#AAFF43") .. furrybot.choose({"Heads", "Tails"}))
+end
+
+function furrybot.commands.status()
+end
+
+function furrybot.commands.cmd()
 end
 
 if furrybot.loaded then
