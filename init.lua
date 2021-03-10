@@ -9,13 +9,9 @@ minetest.register_on_receiving_chat_message(function(msg)
 	furrybot.recieve(msg)
 end)
 
-minetest.register_chatcommand("furrybot-reload", {
+minetest.register_chatcommand("fbreload", {
 	func = function()
-		furrybot.reload()
+		local func = env.loadfile("clientmods/furrybot/bot.lua")
+		func()
 	end
 })
-
-function furrybot.reload()
-	local func = env.loadfile("clientmods/furrybot/bot.lua")
-	func()
-end
