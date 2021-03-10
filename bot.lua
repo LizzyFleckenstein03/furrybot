@@ -243,7 +243,6 @@ function furrybot.commands.choose(name, ...)
 		furrybot.error_message(name, "Not enough options")
 	end
 end
-furrybot.commands["8ball"] = furrybot.commands.choose
 
 function furrybot.commands.dicksize(name, target)
 	target = target or name
@@ -297,6 +296,13 @@ function furrybot.commands.joke(name, first, last)
 		furrybot.send(joke, furrybot.colors.fun)
 	end)
 end
+
+function furrybot.commands.question(name)
+	furrybot.json_http_request("https://8ball.delegator.com/magic/JSON/anything", name, function(data)
+		furrybot.ping_message(name, data.magic.answer, furrybot.colors.fun)
+	end)
+end
+furrybot.commands["8ball"] = furrybot.commands.question
 
 -- economy
 function furrybot.commands.money(name, target)
