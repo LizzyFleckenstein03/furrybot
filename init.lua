@@ -121,14 +121,12 @@ end
 
 function furrybot.commands.verse(name)
 	local req = {
-		--url = "https://labs.bible.org/api/?type=json&passage=random",
-		url = "localhost",
+		url = "https://labs.bible.org/api/?type=json&passage=random",
 	}
 	local res = http.fetch_sync(req)
 	if res.succeeded then
-		--local data = minetest.parse_json(res.data)[1]
-		--furrybot.send(data.text .. C("#00FFC3") .. "[" .. data.bookname .. " " .. data.chapter .. "," .. data.verse .. "]")
-		furrybot.send(res.data)
+		local data = minetest.parse_json(res.data)[1]
+		furrybot.send(data.text .. C("#00FFC3") .. "[" .. data.bookname .. " " .. data.chapter .. "," .. data.verse .. "]")
 	else
 		furrybot.ping_player_error(name, "Request failed with code", res.code)
 	end
