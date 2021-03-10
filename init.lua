@@ -1,24 +1,26 @@
-local commands = {}
+furrybot = rawget(_G, "furrybot") or {}
+furrybot.commands = {}
+
 local C = minetest.get_color_escape_sequence
 local http = minetest.get_http_api()
 
-local function send(msg, color)
+function furrybot.send(msg, color)
 	minetest.send_chat_message("/me " .. C("#00FF3C") .. "[" .. C(color or "#FFFA00") .. msg .. C("#00FF3C") .. "]")
 end
 
-local function ping(player)
+function furrybot.ping(player)
 	return C("#00DCFF") .. "@" .. player .. C("#FFFA00")
 end
 
-local function ping_player(player, message)
-	send(ping(player) .. ": " .. message)
+function furrybot.ping_player(player, message)
+	furrybot.send(furrybot.ping(player) .. ": " .. message)
 end
 
-local function ping_player_error(player, err, detail)
-	ping_player(player, C("#D70029") .. " " .. err ..  " " .. (detail and C("#FF6683") .. "'" .. detail .. "'" .. C("#D70029") or "") .. ".")
+function furrybot.ping_player_error(player, err, detail)
+	furrybot.ping_player(player, C("#D70029") .. " " .. err ..  " " .. (detail and C("#FF6683") .. "'" .. detail .. "'" .. C("#D70029") or "") .. ".")
 end
 
-local function player_online(name)
+function furrybot.player_online(name)
 	for _, n in ipairs(minetest.get_player_names()) do
 		if name == n then
 			return true
@@ -26,26 +28,7 @@ local function player_online(name)
 	end
 end
 
-minetest.register_on_receiving_chat_message(function(msg)
-	msg = minetest.strip_colors(msg)
-	if msg:find("<") == 1 then
-		local idx = msg:find(">")
-		local player = msg:sub(2, idx - 1)
-		local message = msg:sub(idx + 3, #msg)
-		if message:find("!") == 1 then
-			local args = message:sub(2, #message):split(" ")
-			local cmd = table.remove(args, 1)
-			local func = commands[cmd]
-			if func then
-				func(player, unpack(args))
-			else
-				ping_player_error(player, "Invalid command", cmd)
-			end
-		end
-	end
-end)
-
-local function check_online(name, target)
+function furrybot.check_online(name, target)
 	if name == target then
 		ping_player_error(name, "You need to specify another player")
 	elseif player_online(target) then
@@ -55,71 +38,120 @@ local function check_online(name, target)
 	end
 end
 
-function commands.furhug(name, target)
-	if check_online(name, target) then
-		send(name .. " hugs " .. target .. ".")
+function furrybot.recieve(msg)
+	msg = minetest.strip_colors(msg)
+	if msg:find("<") == 1 then
+		local idx = msg:find(">")
+		local player = msg:sub(2, idx - 1)
+		local message = msg:sub(idx + 3, #msg)
+		if message:find("!") == 1 then
+			local args = message:sub(2, #message):split(" ")
+			local cmd = table.remove(args, 1)
+			local func = furrybot.commands[cmd]
+			if func then
+				func(player, unpack(args))
+			else
+				furrybot.ping_player_error(player, "Invalid command", cmd)
+			end
+		end
 	end
 end
 
-commands.furcuddle = commands.furhug
-
-function commands.furkiss(name, target)
-	if check_online(name, target) then
-		send(name .. " kisses " .. target .. ".")
+function furrybot.commands.furhug(name, target)
+	if furrybot.check_online(name, target) then
+		furrybot.send(name .. " hugs " .. target .. ".")
 	end
 end
 
-local target_list = {}
+furrybot.commands.furcuddle = furrybot.commands.furhug
 
-function commands.furbang(name, target)
-	if check_online(name, target) then
-		target_list[target] = function()
-			send(ping(name) .. " and " .. ping(target) .. " are having sex! OwO")
+function furrybot.commands.furkiss(name, target)
+	if furrybot.check_online(name, target) then
+		furrybot.send(name .. " kisses " .. target .. ".")
+	end
+end
+
+furrybot.target_list = {}
+
+function furrybot.commands.furbang(name, target)
+	if furrybot.check_online(name, target) then
+		furrybot.target_list[target] = function()
+			furrybot.send(ping(name) .. " and " .. ping(target) .. " are having sex! OwO")
 		end,
-		ping_player(target, name .. " wants to have sex with you. Type !accept to accept or !deny to deny.")
+		furrybot.ping_player(target, name .. " wants to have sex with you. Type !accept to accept or !deny to deny.")
 	end
 end
 
-commands.fursex = commands.furbang
-commands.furfuck = commands.furbang
+furrybot.commands.fursex = furrybot.commands.furbang
+furrybot.commands.furfuck = furrybot.commands.furbang
 
-function commands.accept(name)
-	local func = target_list[name]
+function furrybot.commands.accept(name)
+	local func = furrybot.target_list[name]
 	if func then
 		func()
 	else
-		ping_player_error(name, "Nothing to accept")
-	end			
-end
-
-function commands.deny(name)
-	if target_list[name] then
-		target_list[name] = nil
-		ping_player(name, "Denied request")
-	else
-		ping_player_error(name, "Nothing to deny")
-	end			
-end
-
-function commands.furhit(name, target)
-	if check_online(name, target) then
-		send(name .. " hits " .. target)
+		furrybot.ping_player_error(name, "Nothing to accept")
 	end
 end
 
-commands.furslap = commands.furhit
+function furrybot.commands.deny(name)
+	if furrybot.target_list[name] then
+		furrybot.target_list[name] = nil
+		furrybot.ping_player(name, "Denied request")
+	else
+		furrybot.ping_player_error(name, "Nothing to deny")
+	end
+end
 
-function commands.furhelp()
+function furrybot.commands.furhit(name, target)
+	if furrybot.check_online(name, target) then
+		furrybot.send(name .. " hits " .. target)
+	end
+end
+
+furrybot.commands.furslap = furrybot.commands.furhit
+
+function furrybot.commands.help()
 	local keys = {}
-	for k in pairs(commands) do
+	for k in pairs(furrybot.commands) do
 		table.insert(keys, k)
 	end
-	send("Available commands: " .. table.concat(keys, ", "))
+	furrybot.send("Available commands: " .. table.concat(keys, ", "))
 end
 
-function commands.verse()
-	http.fetch_async({
-		url = "https://labs.bible.org/api/",
-        data = "passage=random&type=json",
-	})
+function furrybot.commands.verse(name)
+	local req = {
+		--url = "https://labs.bible.org/api/?type=json&passage=random",
+		url = "localhost",
+	}
+	local res = http.fetch_sync(req)
+	if res.succeeded then
+		--local data = minetest.parse_json(res.data)[1]
+		--furrybot.send(data.text .. C("#00FFC3") .. "[" .. data.bookname .. " " .. data.chapter .. "," .. data.verse .. "]")
+		furrybot.send(res.data)
+	else
+		furrybot.ping_player_error(name, "Request failed with code", res.code)
+	end
 end
+
+function furrybot.reload()
+	local f = loadfile(minetest.get_modpath("furrybot") .. "/init.lua")
+	setfenv(f, _G)
+	f()
+end
+
+if not furrybot.loaded then
+	minetest.register_on_receiving_chat_message(function(msg)
+		furrybot.recieve(msg)
+	end)
+
+	minetest.register_chatcommand("furrybot-reload", {
+		func = function()
+			furrybot.reload()
+		end
+	})
+else
+	furrybot.send("Reloaded")
+end
+
+furrybot.loaded = true
