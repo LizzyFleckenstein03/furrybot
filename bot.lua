@@ -15,7 +15,7 @@ function furrybot.ping_player(player, message)
 end
 
 function furrybot.ping_player_error(player, err, detail)
-	furrybot.ping_player(player, C("#D70029") .. " " .. err ..  " " .. (detail and C("#FF6683") .. "'" .. detail .. "'" .. C("#D70029") or "") .. ".")
+	furrybot.ping_player(player, C("#D70029") .. " " .. err .. (detail and C("#FF6683") .. " '" .. detail .. "'" .. C("#D70029") or "") .. ".")
 end
 
 function furrybot.player_online(name)
@@ -27,8 +27,10 @@ function furrybot.player_online(name)
 end
 
 function furrybot.check_online(name, target)
-	if name == target then
-		furrybot.ping_player_error(name, "You need to specify another player")
+	if not target then
+		furrybot.ping_player_error(name, "You need to specify a player")
+	elseif name == target then
+		furrybot.ping_player_error(name, "You need to specify a different player than yourself")
 	elseif furrybot.player_online(target) then
 		return true
 	else
@@ -43,11 +45,16 @@ end
 function furrybot.http_request(url, name, callback)
 	furrybot.http.fetch({url = url}, function(res)
 		if res.succeeded then
-			local data = minetest.parse_json(res.data)[1]
-			callback(data)
+			callback(res.data)
 		else
 			furrybot.ping_player_error(name, "Request failed with code", res.code)
 		end
+	end)
+end
+
+function furrybot.json_http_request(url, name, callback)
+	furrybot.http_request(url, name, function(data)
+		callback(minetest.parse_json(data)[1])
 	end)
 end
 
@@ -134,16 +141,16 @@ function furrybot.commands.help()
 end
 
 function furrybot.commands.verse(name)
-	furrybot.http_request("https://labs.bible.org/api/?type=json&passage=random", name, function(data)
+	furrybot.json_http_request("https://labs.bible.org/api/?type=json&passage=random", name, function(data)
 		furrybot.send(data.text .. C("#00FFC3") .. "[" .. data.bookname .. " " .. data.chapter .. "," .. data.verse .. "]")
 	end)
 end
 
 function furrybot.commands.define(name, word)
 	if word then
-		furrybot.http_request("https://api.dictionaryapi.dev/api/v1/entries/en_US/" .. word, name, function(data)
+		furrybot.json_http_request("https://api.dictionaryapi.dev/api/v1/entries/en_US/" .. word, name, function(data)
 			local meaning = data.meaning
-			local selected = meaning.exclamation or meaning.noun or meaning.verb or meaning["transitive verb"] or meaning.adverb or meaning["relative adverb"]
+			local selected = meaning.exclamation or meaning.noun or meaning.verb or meaning.adjective or meaning["transitive verb"] or meaning.adverb or meaning["relative adverb"]
 			if not selected then
 				print(dump(meaning))
 				furrybot.ping_player_error(name, "Error in parsing response")
@@ -153,6 +160,14 @@ function furrybot.commands.define(name, word)
 		end)
 	else
 		furrybot.ping_player_error(name, "You need to specify a word")
+	end
+end
+
+function furrybot.commands.insult(name, target)
+	if furrybot.check_online(name, target) then
+		furrybot.http_request("https://insult.mattbas.org/api/insult", name, function(data)
+			furrybot.ping_player(target, data)
+		end)
 	end
 end
 
