@@ -125,22 +125,17 @@ end
 
 function furrybot.request_command(on_request, on_accept)
 	return function(name, target)
-		if furrybot.online_or_error(name, target) then
+		if furrybot.online_or_error(name, target) and on_request(name, target) ~= false then
 			furrybot.requests[target] = {
 				origin = name,
 				func = on_accept,
 			}
-			on_request(name, target)
 		end
 	end
 end
 
-function furrybot.money_key(name)
-	return name .. ".money"
-end
-
 function furrybot.get_money(name)
-	local key = furrybot.money_key(name)
+	local key = name .. ".money"
 	if furrybot.storage:contains(key) then
 		return furrybot.storage:get_int(key)
 	else
@@ -149,7 +144,7 @@ function furrybot.get_money(name)
 end
 
 function furrybot.set_money(name, money)
-	furrybot.storage:set_int(furrybot.money_key(name), money)
+	furrybot.storage:set_int(name .. ".money", money)
 end
 
 function furrybot.add_money(name, add)
@@ -197,7 +192,7 @@ function furrybot.commands.deny(name)
 	local tbl = furrybot.requests[name]
 	if tbl then
 		furrybot.requests[name] = nil
-		furrybot.ping_message(name, "Denied request")
+		furrybot.ping_message(name, "Denied request", furrybot.colors.system)
 	else
 		furrybot.error_message(name, "Nothing to deny")
 	end
@@ -217,6 +212,7 @@ furrybot.commands.kiss = furrybot.simple_rpg_command("kisses")
 furrybot.commands.hit = furrybot.simple_rpg_command("hits")
 furrybot.commands.slap = furrybot.simple_rpg_command("slaps")
 furrybot.commands.beat = furrybot.simple_rpg_command("beats")
+furrybot.commands.lick = furrybot.simple_rpg_command("licks")
 
 furrybot.commands.sex = furrybot.request_command(function(name, target)
 	furrybot.ping_message(target, name .. " wants to have sex with you. Type !accept to accept or !deny to deny.", furrybot.colors.system)
@@ -225,6 +221,44 @@ end, function(name, target)
 end)
 furrybot.commands.bang = furrybot.commands.sex
 furrybot.commands.fuck = furrybot.commands.sex
+
+furrybot.commands.marry = furrybot.request_command(function(name, target)
+	if furrybot.storage:contains(name .. ".partner", target) then
+		furrybot.error_message(name, "You are already married to", furrybot.storage:get_string(name .. ".partner"))
+		return false
+	elseif furrybot.storage:contains(target .. ".partner", name) then
+		furrybot.error_message(name, target .. " is already married to", furrybot.storage:get_string(name .. ".partner"))
+		return false
+	else
+		furrybot.ping_message(target, name .. " proposes to you. Type !accept to accept or !deny to deny.", furrybot.colors.system)
+	end
+end, function(name, target)
+	furrybot.storage:set_string(name .. ".partner", target)
+	furrybot.storage:set_string(target .. ".partner", name)
+	furrybot.send("Congratulations, " .. furrybot.ping(name, furrybot.colors.rpg) .. "&" .. furrybot.ping(target, furrybot.colors.rpg) .. ", you are married. You may now kiss :).", furrybot.colors.rpg)
+end)
+furrybot.commands.propose = furrybot.commands.marry
+
+function furrybot.commands.divorce(name)
+	if furrybot.storage:contains(name .. ".partner") then
+		local partner = furrybot.storage:get_string(name .. ".partner")
+		furrybot.storage:set_string(name .. ".partner", "")
+		furrybot.storage:set_string(partner .. ".partner", "")
+		furrybot.ping_message(name, "divorces from " .. partner .. " :(", furrybot.colors.rpg)
+	else
+		furrybot.error_message(name, "You are not married")
+	end
+end
+
+function furrybot.commands.partner(name, target)
+	target = target or name
+	if furrybot.storage:contains(target .. ".partner") then
+		furrybot.ping_message(name, (target == name and "You are" or target .. " is") .. " married to " .. furrybot.storage:get_string(target .. ".partner"), furrybot.colors.system)
+	else
+		furrybot.error_message(name, (target == name and "You are" or target .. " is") .. " not married")
+	end
+end
+furrybot.commands.married = furrybot.commands.partner
 
 -- misc
 function furrybot.commands.rolldice(name)
