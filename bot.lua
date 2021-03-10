@@ -78,7 +78,7 @@ function furrybot.choose(list, color)
 end
 
 function furrybot.random(min, max, color)
-	return furrybot.colors.random .. math.random(#list) .. color
+	return furrybot.colors.random .. math.random(min, max) .. color
 end
 
 function furrybot.http_request(url, name, callback)
