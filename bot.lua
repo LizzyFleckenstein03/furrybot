@@ -18,6 +18,25 @@ function furrybot.ping_player_error(player, err, detail)
 	furrybot.ping_player(player, C("#D70029") .. " " .. err .. (detail and C("#FF6683") .. " '" .. detail .. "'" .. C("#D70029") or "") .. ".")
 end
 
+function furrybot.recieve(msg)
+	msg = minetest.strip_colors(msg)
+	if msg:find("<") == 1 then
+		local idx = msg:find(">")
+		local player = msg:sub(2, idx - 1)
+		local message = msg:sub(idx + 3, #msg)
+		if message:find("!") == 1 then
+			local args = message:sub(2, #message):split(" ")
+			local cmd = table.remove(args, 1)
+			local func = furrybot.commands[cmd]
+			if func then
+				func(player, unpack(args))
+			else
+				furrybot.ping_player_error(player, "Invalid command", cmd)
+			end
+		end
+	end
+end
+
 function furrybot.player_online(name)
 	for _, n in ipairs(minetest.get_player_names()) do
 		if name == n then
@@ -58,24 +77,16 @@ function furrybot.json_http_request(url, name, callback)
 	end)
 end
 
-function furrybot.recieve(msg)
-	msg = minetest.strip_colors(msg)
-	if msg:find("<") == 1 then
-		local idx = msg:find(">")
-		local player = msg:sub(2, idx - 1)
-		local message = msg:sub(idx + 3, #msg)
-		if message:find("!") == 1 then
-			local args = message:sub(2, #message):split(" ")
-			local cmd = table.remove(args, 1)
-			local func = furrybot.commands[cmd]
-			if func then
-				func(player, unpack(args))
-			else
-				furrybot.ping_player_error(player, "Invalid command", cmd)
-			end
-		end
+function furrybot.rand(str, seed, ...)
+	local v = 0
+	local pr = PseudoRandom(seed)
+	for i = 1, #str do
+		v = v + str:byte(i) * pr:next()
 	end
+	return PseudoRandom(v):next(...)
 end
+
+-- commands
 
 function furrybot.commands.hug(name, target)
 	if furrybot.check_online(name, target) then
@@ -184,6 +195,19 @@ end
 
 function furrybot.commands.cmd()
 end
+
+function furrybot.commands.cocksize(name, target)
+	target = target or name
+	local msg = C("#FF4DE1")
+	local size = furrybot.rand(target, 31242, 2, 10)
+	for i = 1, size do
+		msg = msg .. "="
+	end
+	msg = msg .. "D"
+	furrybot.send(msg .. C("#FFFA00") .. "  <= " .. furrybot.ping(target) .. "'s Cock")
+end
+
+furrybot.commands.dicksize = furrybot.commands.cocksize
 
 if furrybot.loaded then
 	furrybot.send("Reloaded")
