@@ -1,5 +1,6 @@
 furrybot.commands = {}
 furrybot.requests = {}
+furrybot.unsafe_commands = {}
 
 local C = minetest.get_color_escape_sequence
 
@@ -34,18 +35,24 @@ function furrybot.error_message(player, error, detail)
 	furrybot.ping_message(player, error .. (detail and furrybot.colors.detail .. " '" .. detail .. "'" .. furrybot.colors.error or "") .. ".", furrybot.colors.error)
 end
 
-function furrybot.recieve(msg)
-	msg = minetest.strip_colors(msg)
-	if msg:find("<") == 1 then
+function furrybot.recieve(rawmsg)
+	local msg = minetest.strip_colors(rawmsg)
+	local nameidx = msg:find("<")
+	local first_byte = rawmsg:byte(1)
+	if nameidx and (first_byte == 60 or first_byte == 27) then
 		local idx = msg:find(">")
-		local player = msg:sub(2, idx - 1)
+		local player = msg:sub(nameidx + 1, idx - 1)
 		local message = msg:sub(idx + 3, #msg)
 		if message:find("!") == 1 then
 			local args = message:sub(2, #message):split(" ")
 			local cmd = table.remove(args, 1)
 			local func = furrybot.commands[cmd]
 			if func then
-				func(player, unpack(args))
+				if furrybot.unsafe_commands[cmd] and first_byte == 27 and rawmsg:sub(2, 12) == "(c@#63d269)" and nameidx == 1 then
+					furrybot.error_message(player, "Sorry, you cannot run this command from discord", cmd)
+				else
+					func(player, unpack(args))
+				end
 			else
 				furrybot.error_message(player, "Invalid command", cmd)
 			end
@@ -187,6 +194,7 @@ function furrybot.commands.accept(name)
 		furrybot.error_message(name, "Nothing to accept")
 	end
 end
+furrybot.unsafe_commands.accept = true
 
 function furrybot.commands.deny(name)
 	local tbl = furrybot.requests[name]
@@ -197,6 +205,7 @@ function furrybot.commands.deny(name)
 		furrybot.error_message(name, "Nothing to deny")
 	end
 end
+furrybot.unsafe_commands.deny = true
 
 -- don't bug players that are running ClamityBot commands from discord
 function furrybot.commands.status()
@@ -238,6 +247,8 @@ end, function(name, target)
 	furrybot.send("Congratulations, " .. furrybot.ping(name, furrybot.colors.rpg) .. "&" .. furrybot.ping(target, furrybot.colors.rpg) .. ", you are married. You may now kiss :).", furrybot.colors.rpg)
 end)
 furrybot.commands.propose = furrybot.commands.marry
+furrybot.unsafe_commands.marry = true
+furrybot.unsafe_commands.propose = true
 
 function furrybot.commands.divorce(name)
 	if furrybot.storage:contains(name .. ".partner") then
@@ -249,6 +260,7 @@ function furrybot.commands.divorce(name)
 		furrybot.error_message(name, "You are not married")
 	end
 end
+furrybot.unsafe_commands.divorce = true
 
 function furrybot.commands.partner(name, target)
 	target = target or name
@@ -360,6 +372,7 @@ function furrybot.commands.pay(name, target, number)
 		end
 	end
 end
+furrybot.unsafe_commands.pay = true
 
 -- send load message
 furrybot.send("FurryBot - " .. C("#170089") .. "https://github.com/EliasFleckenstein03/furrybot", furrybot.colors.system)
