@@ -224,6 +224,7 @@ end
 furrybot.commands.cry = furrybot.solo_rpg_command("cries")
 furrybot.commands.laugh = furrybot.solo_rpg_command("laughs")
 furrybot.commands.confused = furrybot.solo_rpg_command("is confused")
+furrybot.commands.smile = furrybot.solo_rpg_command("smiles")
 furrybot.commands.hug = furrybot.interactive_rpg_command("hugs")
 furrybot.commands.cuddle = furrybot.interactive_rpg_command("cuddles")
 furrybot.commands.kiss = furrybot.interactive_rpg_command("kisses")
