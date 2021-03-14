@@ -2,6 +2,7 @@ furrybot.commands = {}
 furrybot.requests = {}
 furrybot.unsafe_commands = {}
 
+local http, env, storage
 local C = minetest.get_color_escape_sequence
 
 furrybot.colors = {
@@ -60,6 +61,22 @@ function furrybot.recieve(rawmsg)
 	end
 end
 
+function furrybot.reload()
+	local func, err = env.loadfile("clientmods/furrybot/bot.lua")
+	if func then
+		local old_fb = table.copy(furrybot)
+		local status, init = pcall(func)
+		if status then
+			init(http, env, storage)
+		else
+			furrybot = old_fb
+			return false, furrybot.colors.error .. "Error: " .. furrybot.colors.detail .. init
+		end
+	else
+		return false, furrybot.colors.error .. "Syntax error: " .. furrybot.colors.detail .. err
+	end
+end
+
 function furrybot.player_online(name)
 	for _, n in ipairs(minetest.get_player_names()) do
 		if name == n then
@@ -89,7 +106,7 @@ function furrybot.random(min, max, color)
 end
 
 function furrybot.http_request(url, name, callback)
-	furrybot.http.fetch({url = url}, function(res)
+	http.fetch({url = url}, function(res)
 		if res.succeeded then
 			callback(res.data)
 		else
@@ -149,15 +166,15 @@ end
 
 function furrybot.get_money(name)
 	local key = name .. ".money"
-	if furrybot.storage:contains(key) then
-		return furrybot.storage:get_int(key)
+	if storage:contains(key) then
+		return storage:get_int(key)
 	else
 		return 100
 	end
 end
 
 function furrybot.set_money(name, money)
-	furrybot.storage:set_int(name .. ".money", money)
+	storage:set_int(name .. ".money", money)
 end
 
 function furrybot.add_money(name, add)
@@ -242,18 +259,18 @@ furrybot.commands.bang = furrybot.commands.sex
 furrybot.commands.fuck = furrybot.commands.sex
 
 furrybot.commands.marry = furrybot.request_command(function(name, target)
-	if furrybot.storage:contains(name .. ".partner", target) then
-		furrybot.error_message(name, "You are already married to", furrybot.storage:get_string(name .. ".partner"))
+	if storage:contains(name .. ".partner", target) then
+		furrybot.error_message(name, "You are already married to", storage:get_string(name .. ".partner"))
 		return false
-	elseif furrybot.storage:contains(target .. ".partner", name) then
-		furrybot.error_message(name, target .. " is already married to", furrybot.storage:get_string(name .. ".partner"))
+	elseif storage:contains(target .. ".partner", name) then
+		furrybot.error_message(name, target .. " is already married to", storage:get_string(name .. ".partner"))
 		return false
 	else
 		furrybot.ping_message(target, name .. " proposes to you. Type !accept to accept or !deny to deny.", furrybot.colors.system)
 	end
 end, function(name, target)
-	furrybot.storage:set_string(name .. ".partner", target)
-	furrybot.storage:set_string(target .. ".partner", name)
+	storage:set_string(name .. ".partner", target)
+	storage:set_string(target .. ".partner", name)
 	furrybot.send("Congratulations, " .. furrybot.ping(name, furrybot.colors.rpg) .. "&" .. furrybot.ping(target, furrybot.colors.rpg) .. ", you are married. You may now kiss :).", furrybot.colors.rpg)
 end)
 furrybot.commands.propose = furrybot.commands.marry
@@ -261,10 +278,10 @@ furrybot.unsafe_commands.marry = true
 furrybot.unsafe_commands.propose = true
 
 function furrybot.commands.divorce(name)
-	if furrybot.storage:contains(name .. ".partner") then
-		local partner = furrybot.storage:get_string(name .. ".partner")
-		furrybot.storage:set_string(name .. ".partner", "")
-		furrybot.storage:set_string(partner .. ".partner", "")
+	if storage:contains(name .. ".partner") then
+		local partner = storage:get_string(name .. ".partner")
+		storage:set_string(name .. ".partner", "")
+		storage:set_string(partner .. ".partner", "")
 		furrybot.ping_message(name, "divorces from " .. partner .. " :(", furrybot.colors.rpg)
 	else
 		furrybot.error_message(name, "You are not married")
@@ -274,8 +291,8 @@ furrybot.unsafe_commands.divorce = true
 
 function furrybot.commands.partner(name, target)
 	target = target or name
-	if furrybot.storage:contains(target .. ".partner") then
-		furrybot.ping_message(name, (target == name and "You are" or target .. " is") .. " married to " .. furrybot.storage:get_string(target .. ".partner"), furrybot.colors.system)
+	if storage:contains(target .. ".partner") then
+		furrybot.ping_message(name, (target == name and "You are" or target .. " is") .. " married to " .. storage:get_string(target .. ".partner"), furrybot.colors.system)
 	else
 		furrybot.error_message(name, (target == name and "You are" or target .. " is") .. " not married")
 	end
@@ -391,4 +408,8 @@ if furrybot.loaded then
 	furrybot.send("Reloaded", furrybot.colors.system)
 else
 	furrybot.loaded = true
+end
+
+return function(_http, _env, _storage)
+	http, env, storage = _http, _env, _storage
 end
