@@ -122,11 +122,17 @@ function furrybot.repeat_string(str, times)
 	return msg
 end
 
-function furrybot.simple_rpg_command(action)
+function furrybot.interactive_rpg_command(action)
 	return function(name, target)
 		if furrybot.online_or_error(name, target) then
 			furrybot.send(name .. " " .. action .. " " .. target .. ".", furrybot.colors.rpg)
 		end
+	end
+end
+
+function furrybot.solo_rpg_command(action)
+	return function(name)
+		furrybot.send(name .. " " .. action .. ".", furrybot.colors.rpg)
 	end
 end
 
@@ -215,13 +221,16 @@ function furrybot.commands.cmd()
 end
 
 -- rpg
-furrybot.commands.hug = furrybot.simple_rpg_command("hugs")
-furrybot.commands.cuddle = furrybot.simple_rpg_command("cuddles")
-furrybot.commands.kiss = furrybot.simple_rpg_command("kisses")
-furrybot.commands.hit = furrybot.simple_rpg_command("hits")
-furrybot.commands.slap = furrybot.simple_rpg_command("slaps")
-furrybot.commands.beat = furrybot.simple_rpg_command("beats")
-furrybot.commands.lick = furrybot.simple_rpg_command("licks")
+furrybot.commands.cry = furrybot.solo_rpg_command("cries")
+furrybot.commands.laugh = furrybot.solo_rpg_command("laughs")
+furrybot.commands.confused = furrybot.solo_rpg_command("is confused")
+furrybot.commands.hug = furrybot.interactive_rpg_command("hugs")
+furrybot.commands.cuddle = furrybot.interactive_rpg_command("cuddles")
+furrybot.commands.kiss = furrybot.interactive_rpg_command("kisses")
+furrybot.commands.hit = furrybot.interactive_rpg_command("hits")
+furrybot.commands.slap = furrybot.interactive_rpg_command("slaps")
+furrybot.commands.beat = furrybot.interactive_rpg_command("beats")
+furrybot.commands.lick = furrybot.interactive_rpg_command("licks")
 
 furrybot.commands.sex = furrybot.request_command(function(name, target)
 	furrybot.ping_message(target, name .. " wants to have sex with you. Type !accept to accept or !deny to deny.", furrybot.colors.system)
