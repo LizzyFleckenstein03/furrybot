@@ -43,7 +43,11 @@ function furrybot.recieve(rawmsg)
 	if nameidx and (first_byte == 60 or first_byte == 27) then
 		local idx = msg:find(">")
 		local player = msg:sub(nameidx + 1, idx - 1)
-		local message = msg:sub(idx + 3, #msg)
+		local sidx = idx + 2
+		if msg:sub(idx + 1, idx + 1) == ":" then
+			sidx = sidx + 1
+		end
+		local message = msg:sub(sidx, #msg)
 		if message:find("!") == 1 then
 			local args = message:sub(2, #message):split(" ")
 			local cmd = table.remove(args, 1)
