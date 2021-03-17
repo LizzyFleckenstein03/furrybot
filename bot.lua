@@ -338,7 +338,7 @@ end
 
 function furrybot.commands.define(name, word)
 	if word then
-		furrybot.json_http_request("https://api.dictionaryapi.dev/api/v1/entries/en_US/" .. word, name, function(data)
+		furrybot.json_http_request("https://api.dictionaryapi.dev/api/v1/entries/en_US/" .. word:gsub("computer", "person"), name, function(data)
 			local meaning = data.meaning
 			local selected = meaning.exclamation or meaning.noun or meaning.verb or meaning.adjective or meaning["transitive verb"] or meaning.adverb or meaning["relative adverb"]
 			if not selected then
