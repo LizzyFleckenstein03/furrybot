@@ -36,15 +36,7 @@ function furrybot.error_message(player, error, detail)
 	furrybot.ping_message(player, error .. (detail and furrybot.colors.detail .. " '" .. detail .. "'" .. furrybot.colors.error or "") .. ".", furrybot.colors.error)
 end
 
-function furrybot.recieve(rawmsg)
-	local message_info = libclamity.parse_chat_message(rawmsg)
-
-	if not message_info then
-		return
-	end
-
-	local player, message, discord = message_info.player, message_info.message, message_info.discord
-
+function furrybot.parse_message(player, message, discord)
 	if message:find("!") == 1 then
 		local args = message:sub(2, #message):split(" ")
 		local cmd = table.remove(args, 1)

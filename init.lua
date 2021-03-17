@@ -4,8 +4,8 @@ local http = minetest.request_http_api()
 local env = minetest.request_insecure_environment()
 local storage = minetest.get_mod_storage()
 
-minetest.register_on_receiving_chat_message(function(msg)
-	furrybot.recieve(msg)
+libclamity.register_on_chat_message(function(...)
+	furrybot.parse_message(...)
 end)
 
 minetest.register_chatcommand("fbreload", {
