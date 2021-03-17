@@ -37,30 +37,26 @@ function furrybot.error_message(player, error, detail)
 end
 
 function furrybot.recieve(rawmsg)
-	local msg = minetest.strip_colors(rawmsg)
-	local nameidx = msg:find("<")
-	local first_byte = rawmsg:byte(1)
-	if nameidx and (first_byte == 60 or first_byte == 27) then
-		local idx = msg:find(">")
-		local player = msg:sub(nameidx + 1, idx - 1)
-		local sidx = idx + 2
-		if msg:sub(idx + 1, idx + 1) == ":" then
-			sidx = sidx + 1
-		end
-		local message = msg:sub(sidx, #msg)
-		if message:find("!") == 1 then
-			local args = message:sub(2, #message):split(" ")
-			local cmd = table.remove(args, 1)
-			local func = furrybot.commands[cmd]
-			if func then
-				if furrybot.unsafe_commands[cmd] and first_byte == 27 and rawmsg:sub(2, 12) == "(c@#63d269)" and nameidx == 1 then
-					furrybot.error_message(player, "Sorry, you cannot run this command from discord", cmd)
-				else
-					func(player, unpack(args))
-				end
+	local message_info = libclamity.parse_chat_message(rawmsg)
+
+	if not message_info then
+		return
+	end
+
+	local player, message, discord = message_info.player, message_info.message, message_info.discord
+
+	if message:find("!") == 1 then
+		local args = message:sub(2, #message):split(" ")
+		local cmd = table.remove(args, 1)
+		local func = furrybot.commands[cmd]
+		if func then
+			if furrybot.unsafe_commands[cmd] and discord then
+				furrybot.error_message(player, "Sorry, you cannot run this command from discord", cmd)
 			else
-				furrybot.error_message(player, "Invalid command", cmd)
+				func(player, unpack(args))
 			end
+		else
+			furrybot.error_message(player, "Invalid command", cmd)
 		end
 	end
 end
