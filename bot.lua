@@ -313,7 +313,7 @@ function furrybot.commands.dicksize(name, target)
 	target = target or name
 	local size = furrybot.strrandom(target, 31242, 2, 10)
 	local dick = furrybot.repeat_string("=", size) .. "D"
-	furrybot.send(dick .. furrybot.colors.system .. "   ← " .. furrybot.ping(target, furrybot.colors.system) .. "'s Dick", C("#FF4DE1"))
+	furrybot.send(minetest.rainbow(dick) .. furrybot.colors.system .. "   ← " .. furrybot.ping(target, furrybot.colors.system) .. "'s Dick", C("#FF4DE1"))
 end
 furrybot.commands.cocksize = furrybot.commands.dicksize
 
