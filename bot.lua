@@ -242,6 +242,12 @@ furrybot.commands.slap = furrybot.interactive_rpg_command("slaps")
 furrybot.commands.beat = furrybot.interactive_rpg_command("beats")
 furrybot.commands.lick = furrybot.interactive_rpg_command("licks")
 
+furrybot.commands.smellfeet = furrybot.request_command(function(name, target)
+	furrybot.ping_message(target, name .. " wants to smell your feet. Type !accept to accept or !deny to deny.", furrybot.colors.system)
+end, function(name, target)
+	furrybot.ping_message(name, " you are smelling " .. target .. "'s feet. They are kinda stinky!", furrybot.colors.rpg)
+end)
+
 furrybot.commands.sex = furrybot.request_command(function(name, target)
 	furrybot.ping_message(target, name .. " wants to have sex with you. Type !accept to accept or !deny to deny.", furrybot.colors.system)
 end, function(name, target)
