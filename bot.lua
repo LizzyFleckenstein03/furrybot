@@ -248,6 +248,12 @@ end, function(name, target)
 	furrybot.ping_message(name, " you are smelling " .. target .. "'s feet. They are kinda stinky!", furrybot.colors.rpg)
 end)
 
+furrybot.commands.blowjob = furrybot.request_command(function(name, target)
+	furrybot.ping_message(target, name .. " wants to suck your dick. Type !accept to accept or !deny to deny.", furrybot.colors.system)
+end, function(name, target)
+	furrybot.send(name .. " is sucking " .. target .. "'s cock. ˣoˣ IT'S SO HUGE", furrybot.colors.rpg)
+end)
+
 furrybot.commands.sex = furrybot.request_command(function(name, target)
 	furrybot.ping_message(target, name .. " wants to have sex with you. Type !accept to accept or !deny to deny.", furrybot.colors.system)
 end, function(name, target)
