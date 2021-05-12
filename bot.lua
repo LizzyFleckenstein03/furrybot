@@ -318,6 +318,10 @@ end
 furrybot.commands.cocksize = furrybot.commands.dicksize
 
 -- fun
+function furrybot.commands.amogus(name)
+	furrybot.ping_message(name, "YOU KINDA SUS MAN", furrybot.colors.fun)
+end
+
 function furrybot.commands.verse(name)
 	furrybot.json_http_request("https://labs.bible.org/api/?type=json&passage=random", name, function(data)
 		furrybot.send(data.text .. furrybot.colors.info .. "[" .. data.bookname .. " " .. data.chapter .. "," .. data.verse .. "]", furrybot.colors.fun)
