@@ -189,6 +189,10 @@ function furrybot.money(money, color)
 	return furrybot.colors.money .. "$" .. money .. color
 end
 
+function furrybot.get_ascii_dick(name)
+	return minetest.rainbow(furrybot.repeat_string("=", furrybot.strrandom(name, 31242, 2, 10)) .. "D")
+end
+
 -- Commands
 
 -- system
@@ -261,6 +265,10 @@ end, function(name, target)
 end)
 furrybot.commands.bang = furrybot.commands.sex
 furrybot.commands.fuck = furrybot.commands.sex
+
+furrybot.commands.cum = function(name)
+	furrybot.send(name .. " is cumming: " .. furrybot.get_ascii_dick(name) .. C("#FFFFFF") .. furrybot.repeat_string("~", math.random(1, 10)), furrybot.colors.rpg)
+end
 
 furrybot.commands.marry = furrybot.request_command(function(name, target)
 	if storage:contains(name .. ".partner", target) then
@@ -388,9 +396,7 @@ end
 
 function furrybot.commands.dicksize(name, target)
 	target = target or name
-	local size = furrybot.strrandom(target, 31242, 2, 10)
-	local dick = furrybot.repeat_string("=", size) .. "D"
-	furrybot.send(minetest.rainbow(dick) .. furrybot.colors.system .. "   ← " .. furrybot.ping(target, furrybot.colors.system) .. "'s Dick", C("#FF4DE1"))
+	furrybot.send(furrybot.get_ascii_dick(target) .. furrybot.colors.system .. "   ← " .. furrybot.ping(target, furrybot.colors.system) .. "'s Dick", C("#FF4DE1"))
 end
 furrybot.commands.cocksize = furrybot.commands.dicksize
 
