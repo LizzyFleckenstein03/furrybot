@@ -189,8 +189,16 @@ function furrybot.money(money, color)
 	return furrybot.colors.money .. "$" .. money .. color
 end
 
+function furrybot.get_ascii_genitals(name, begin, middle, ending, seed)
+	return begin .. furrybot.repeat_string(middle, furrybot.strrandom(name, seed, 2, 10)) .. ending
+end
+
 function furrybot.get_ascii_dick(name)
-	return minetest.rainbow(furrybot.repeat_string("=", furrybot.strrandom(name, 31242, 2, 10)) .. "D")
+	return minetest.rainbow(furrybot.get_ascii_genitals(name, "8", "=", "D", 69))
+end
+
+function furrybot.get_ascii_boobs(name)
+	return furrybot.get_ascii_genitals(name, "E", "Ξ", "B", 420)
 end
 
 -- Commands
@@ -396,9 +404,14 @@ end
 
 function furrybot.commands.dicksize(name, target)
 	target = target or name
-	furrybot.send(furrybot.get_ascii_dick(target) .. furrybot.colors.system .. "   ← " .. furrybot.ping(target, furrybot.colors.system) .. "'s Dick", C("#FF4DE1"))
+	furrybot.send(furrybot.get_ascii_dick(target) .. furrybot.colors.system .. "   ← " .. furrybot.ping(target, furrybot.colors.system) .. "'s Dick", furrybot.colors.system)
 end
 furrybot.commands.cocksize = furrybot.commands.dicksize
+
+function furrybot.commands.boobsize(name, target)
+	target = target or name
+	furrybot.send(furrybot.get_ascii_boobs(target) .. furrybot.colors.system .. "   ← " .. furrybot.ping(target, furrybot.colors.system) .. "'s Boobs", furrybot.colors.system)
+end
 
 -- fun
 function furrybot.commands.amogus(name)
