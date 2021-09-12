@@ -43,7 +43,7 @@ function furrybot.parse_message(player, message, discord)
 		local func = furrybot.commands[cmd]
 		if func then
 			if furrybot.unsafe_commands[cmd] and discord then
-				furrybot.error_message(player, "Sorry, you cannot run this command from discord", cmd)
+				furrybot.error_message(player, "Sorry, you cannot run this command from discord: ", cmd)
 			else
 				func(player, unpack(args))
 			end
@@ -267,7 +267,7 @@ furrybot.commands.marry = furrybot.request_command(function(name, target)
 		furrybot.error_message(name, "You are already married to", storage:get_string(name .. ".partner"))
 		return false
 	elseif storage:contains(target .. ".partner", name) then
-		furrybot.error_message(name, target .. " is already married to", storage:get_string(name .. ".partner"))
+		furrybot.error_message(name, target .. " is already married to", storage:get_string(target .. ".partner"))
 		return false
 	else
 		furrybot.ping_message(target, name .. " proposes to you. Type !accept to accept or !deny to deny.", furrybot.colors.system)
@@ -409,7 +409,7 @@ function furrybot.commands.define(name, word)
 	if word then
 		furrybot.json_http_request("https://api.dictionaryapi.dev/api/v1/entries/en_US/" .. word:gsub("computer", "person"), name, function(data)
 			local meaning = data.meaning
-			local selected = meaning.abbreviation or meaning["cardinal number"] or meaning.exclamation or meaning.noun or meaning.verb or meaning.adjective or meaning["transitive verb"] or meaning.adverb or meaning["relative adverb"]
+			local selected = meaning.abbreviation or meaning["cardinal number"] or meaning.exclamation or meaning.noun or meaning.verb or meaning.adjective or meaning["transitive verb"] or meaning.adverb or meaning["relative adverb"] or meaning.preposition
 			if not selected then
 				print(dump(meaning))
 				furrybot.error_message(name, "Error in parsing response")
