@@ -37,7 +37,7 @@ function furrybot.error_message(player, error, detail)
 end
 
 function furrybot.parse_message(player, message, discord)
-	if message:find("!") == 1 then
+	if message:find("!") == 1 and not furrybot.ignored[player] then
 		local args = message:sub(2, #message):split(" ")
 		local cmd = table.remove(args, 1)
 		local func = furrybot.commands[cmd]
@@ -65,10 +65,10 @@ function furrybot.reload()
 
 		if not status then
 			furrybot = old_fb
-			return false, furrybot.colors.error .. "Error: " .. furrybot.colors.detail .. init
+			furrybot.send("Error: " .. furrybot.colors.detail .. init, furrybot.colors.error)
 		end
 	else
-		return false, furrybot.colors.error .. "Syntax error: " .. furrybot.colors.detail .. err
+		furrybot.send("Syntax error: " .. furrybot.colors.detail .. err, furrybot.colors.error)
 	end
 end
 
@@ -201,7 +201,7 @@ end
 return function(_http, _env, _storage)
 	http, env, storage = _http, _env, _storage
 
-	for _, f in ipairs {"nsfw", "roleplay", "death", "economy", "random", "http"} do
+	for _, f in ipairs {"nsfw", "roleplay", "death", "economy", "random", "http", "operator"} do
 		local func, err = env.loadfile("clientmods/furrybot/" .. f .. ".lua")
 
 		if not func then

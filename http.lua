@@ -55,4 +55,3 @@ furrybot.commands["8ball"] = furrybot.commands.question
 return function(_http, _env, _storage)
 	http, env, storage = _http, _env, _storage
 end
-

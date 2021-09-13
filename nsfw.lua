@@ -6,11 +6,11 @@ function furrybot.get_ascii_genitals(name, begin, middle, ending, seed)
 end
 
 function furrybot.get_ascii_dick(name)
-	return minetest.rainbow(furrybot.get_ascii_genitals(name, "8", "=", "D", 69))
+	return minetest.rainbow(furrybot.get_ascii_genitals(name, "8", "=", "D", 31242))
 end
 
 function furrybot.get_ascii_boobs(name)
-	return furrybot.get_ascii_genitals(name, "E", "Ξ", "3", 420)
+	return furrybot.get_ascii_genitals(name, "E", "Ξ", "3", 31243)
 end
 
 function furrybot.commands.dicksize(name, target)
