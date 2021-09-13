@@ -104,6 +104,10 @@ function furrybot.commands.book(name)
 	furrybot.ping_message(name, books[math.random(#books)], furrybot.colors.system)
 end
 
+function furrybot.commands.video(name)
+	furrybot.ping_message(name, "https://youtube.com/watch?v=dQw4w9WgXcQ", furrybot.colors.system)
+end
+
 return function(_http, _env, _storage)
 	http, env, storage = _http, _env, _storage
 end
