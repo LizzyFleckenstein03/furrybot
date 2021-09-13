@@ -10,7 +10,7 @@ furrybot.colors = {
 	system = C("#FFFA00"),
 	error = C("#D70029"),
 	detail = C("#FF6683"),
-	rpg = C("#FFD94E"),
+	roleplay = C("#FFD94E"),
 	braces = C("#FFFAC0"),
 	info = C("#00FFC3"),
 	fun = C("#A0FF24"),
@@ -131,17 +131,17 @@ function furrybot.repeat_string(str, times)
 	return msg
 end
 
-function furrybot.interactive_rpg_command(action)
+function furrybot.interactive_roleplay_command(action)
 	return function(name, target)
 		if furrybot.online_or_error(name, target) then
-			furrybot.send(name .. " " .. action .. " " .. target .. ".", furrybot.colors.rpg)
+			furrybot.send(name .. " " .. action .. " " .. target .. ".", furrybot.colors.roleplay)
 		end
 	end
 end
 
-function furrybot.solo_rpg_command(action)
+function furrybot.solo_roleplay_command(action)
 	return function(name)
-		furrybot.send(name .. " " .. action .. ".", furrybot.colors.rpg)
+		furrybot.send(name .. " " .. action .. ".", furrybot.colors.roleplay)
 	end
 end
 
@@ -156,54 +156,8 @@ function furrybot.request_command(on_request, on_accept)
 	end
 end
 
-function furrybot.get_money(name)
-	local key = name .. ".money"
-	if storage:contains(key) then
-		return storage:get_int(key)
-	else
-		return 100
-	end
-end
+-- General purpose commands
 
-function furrybot.set_money(name, money)
-	storage:set_int(name .. ".money", money)
-end
-
-function furrybot.add_money(name, add)
-	local money = furrybot.get_money(name)
-	furrybot.set_money(name, money + add)
-end
-
-function furrybot.take_money(name, remove)
-	local money = furrybot.get_money(name)
-	local new = money - remove
-	if new < 0 then
-		return false
-	else
-		furrybot.set_money(name, new)
-		return true
-	end
-end
-
-function furrybot.money(money, color)
-	return furrybot.colors.money .. "$" .. money .. color
-end
-
-function furrybot.get_ascii_genitals(name, begin, middle, ending, seed)
-	return begin .. furrybot.repeat_string(middle, furrybot.strrandom(name, seed, 2, 10)) .. ending
-end
-
-function furrybot.get_ascii_dick(name)
-	return minetest.rainbow(furrybot.get_ascii_genitals(name, "8", "=", "D", 69))
-end
-
-function furrybot.get_ascii_boobs(name)
-	return furrybot.get_ascii_genitals(name, "E", "Ξ", "B", 420)
-end
-
--- Commands
-
--- system
 function furrybot.commands.help()
 	local keys = {}
 	for k in pairs(furrybot.commands) do
@@ -241,258 +195,6 @@ end
 function furrybot.commands.cmd()
 end
 
--- rpg
-furrybot.commands.cry = furrybot.solo_rpg_command("cries")
-furrybot.commands.laugh = furrybot.solo_rpg_command("laughs")
-furrybot.commands.confused = furrybot.solo_rpg_command("is confused")
-furrybot.commands.smile = furrybot.solo_rpg_command("smiles")
-furrybot.commands.hug = furrybot.interactive_rpg_command("hugs")
-furrybot.commands.cuddle = furrybot.interactive_rpg_command("cuddles")
-furrybot.commands.kiss = furrybot.interactive_rpg_command("kisses")
-furrybot.commands.hit = furrybot.interactive_rpg_command("hits")
-furrybot.commands.slap = furrybot.interactive_rpg_command("slaps")
-furrybot.commands.beat = furrybot.interactive_rpg_command("beats")
-furrybot.commands.lick = furrybot.interactive_rpg_command("licks")
-
-furrybot.commands.smellfeet = furrybot.request_command(function(name, target)
-	furrybot.ping_message(target, name .. " wants to smell your feet. Type !accept to accept or !deny to deny.", furrybot.colors.system)
-end, function(name, target)
-	furrybot.ping_message(name, " you are smelling " .. target .. "'s feet. They are kinda stinky!", furrybot.colors.rpg)
-end)
-
-furrybot.commands.blowjob = furrybot.request_command(function(name, target)
-	furrybot.ping_message(target, name .. " wants to suck your dick. Type !accept to accept or !deny to deny.", furrybot.colors.system)
-end, function(name, target)
-	furrybot.send(name .. " is sucking " .. target .. "'s cock. ˣoˣ IT'S SO HUGE", furrybot.colors.rpg)
-end)
-
-furrybot.commands.sex = furrybot.request_command(function(name, target)
-	furrybot.ping_message(target, name .. " wants to have sex with you. Type !accept to accept or !deny to deny.", furrybot.colors.system)
-end, function(name, target)
-	furrybot.send(name .. " and " .. target .. " are having sex! OwO", furrybot.colors.rpg)
-end)
-furrybot.commands.bang = furrybot.commands.sex
-furrybot.commands.fuck = furrybot.commands.sex
-
-furrybot.commands.cum = function(name)
-	furrybot.send(name .. " is cumming: " .. furrybot.get_ascii_dick(name) .. C("#FFFFFF") .. furrybot.repeat_string("~", math.random(1, 10)), furrybot.colors.rpg)
-end
-
-furrybot.commands.marry = furrybot.request_command(function(name, target)
-	if storage:contains(name .. ".partner", target) then
-		furrybot.error_message(name, "You are already married to", storage:get_string(name .. ".partner"))
-		return false
-	elseif storage:contains(target .. ".partner", name) then
-		furrybot.error_message(name, target .. " is already married to", storage:get_string(target .. ".partner"))
-		return false
-	else
-		furrybot.ping_message(target, name .. " proposes to you. Type !accept to accept or !deny to deny.", furrybot.colors.system)
-	end
-end, function(name, target)
-	storage:set_string(name .. ".partner", target)
-	storage:set_string(target .. ".partner", name)
-	furrybot.send("Congratulations, " .. furrybot.ping(name, furrybot.colors.rpg) .. "&" .. furrybot.ping(target, furrybot.colors.rpg) .. ", you are married. You may now kiss :).", furrybot.colors.rpg)
-end)
-furrybot.commands.propose = furrybot.commands.marry
-furrybot.unsafe_commands.marry = true
-furrybot.unsafe_commands.propose = true
-
-function furrybot.commands.divorce(name)
-	if storage:contains(name .. ".partner") then
-		local partner = storage:get_string(name .. ".partner")
-		storage:set_string(name .. ".partner", "")
-		storage:set_string(partner .. ".partner", "")
-		furrybot.ping_message(name, "divorces from " .. partner .. " :(", furrybot.colors.rpg)
-	else
-		furrybot.error_message(name, "You are not married")
-	end
-end
-furrybot.unsafe_commands.divorce = true
-
-function furrybot.commands.partner(name, target)
-	target = target or name
-	if storage:contains(target .. ".partner") then
-		furrybot.ping_message(name, (target == name and "You are" or target .. " is") .. " married to " .. storage:get_string(target .. ".partner"), furrybot.colors.system)
-	else
-		furrybot.error_message(name, (target == name and "You are" or target .. " is") .. " not married")
-	end
-end
-furrybot.commands.married = furrybot.commands.partner
-
-furrybot.kill_deathmessages = {
-	"%s walked into fire whilst fighting %s",
-	"%s was struck by lightning whilst fighting %s",
-	"%s was burnt to a crisp whilst fighting %s",
-	"%s tried to swim in lava to escape %s",
-	"%s walked into danger zone due to %s",
-	"%s suffocated in a wall whilst fighting %s",
-	"%s drowned whilst trying to escape %s",
-	"%s starved to death whilst fighting %s",
-	"%s walked into a cactus whilst trying to escape %s",
-	"%s hit the ground too hard whilst trying to escape %s",
-	"%s experienced kinetic energy whilst trying to escape %s",
-	"%s didn't want to live in the same world as %s",
-	"%s died because of %s",
-	"%s was killed by magic whilst trying to escape %s",
-	"%s was killed by %s using magic",
-	"%s was roasted in dragon breath by %s",
-	"%s withered away whilst fighting %s",
-	"%s was shot by a skull from %s",
-	"%s was squashed by a falling anvil whilst fighting %s",
-	"%s was slain by %s",
-	"%s was shot by %s",
-	"%s was fireballed by %s",
-	"%s was killed trying to hurt %s",
-	"%s was blown up by %s",
-	"%s was squashed by %s",
-}
-
-furrybot.deathmessages = {
-	"%s went up in flames",
-	"%s was struck by lightning",
-	"%s burned to death",
-	"%s tried to swim in lava",
-	"%s discovered the floor was lava",
-	"%s suffocated in a wall",
-	"%s drowned",
-	"%s starved to death",
-	"%s was pricked to death",
-	"%s hit the ground too hard",
-	"%s experienced kinetic energy",
-	"%s fell out of the world",
-	"%s died",
-	"%s was killed by magic",
-	"%s was roasted in dragon breath",
-	"%s withered away",
-	"%s was squashed by a falling anvil",
-	"%s blew up",
-	"%s was squished too much",
-	"%s went off with a bang",
-}
-
-function furrybot.commands.kill(name, target)
-	if furrybot.online_or_error(name, target, true) then
-		if name == target then
-			furrybot.send(string.format("%s died due to lack of friends", target), furrybot.colors.rpg)
-		else
-			furrybot.send(string.format(furrybot.kill_deathmessages[math.random(#furrybot.kill_deathmessages)], target, name), furrybot.colors.rpg)
-		end
-	end
-end
-
-function furrybot.commands.die(name)
-	furrybot.send(string.format(furrybot.deathmessages[math.random(#furrybot.deathmessages)], name), furrybot.colors.rpg)
-end
-
--- misc
-function furrybot.commands.rolldice(name)
-	furrybot.ping_message(name, "rolled a dice and got a " .. furrybot.random(1, 6, furrybot.colors.system) .. ".", furrybot.colors.system)
-end
-
-function furrybot.commands.coinflip(name)
-	furrybot.ping_message(name, "flipped a coin and got " .. furrybot.choose({"Heads", "Tails"}, furrybot.colors.system) .. ".", furrybot.colors.system)
-end
-
-function furrybot.commands.choose(name, ...)
-	local options = {...}
-	if #options > 1 then
-		furrybot.ping_message(name, "I choose " .. furrybot.choose(options, "", furrybot.colors.system) .. ".", furrybot.colors.system)
-	else
-		furrybot.error_message(name, "Not enough options")
-	end
-end
-
-function furrybot.commands.dicksize(name, target)
-	target = target or name
-	furrybot.send(furrybot.get_ascii_dick(target) .. furrybot.colors.system .. "   ← " .. furrybot.ping(target, furrybot.colors.system) .. "'s Dick", furrybot.colors.system)
-end
-furrybot.commands.cocksize = furrybot.commands.dicksize
-
-function furrybot.commands.boobsize(name, target)
-	target = target or name
-	furrybot.send(furrybot.get_ascii_boobs(target) .. furrybot.colors.system .. "   ← " .. furrybot.ping(target, furrybot.colors.system) .. "'s Boobs", furrybot.colors.system)
-end
-
--- fun
-function furrybot.commands.amogus(name)
-	furrybot.ping_message(name, "YOU KINDA SUS MAN", furrybot.colors.fun)
-end
-
-function furrybot.commands.verse(name)
-	furrybot.json_http_request("https://labs.bible.org/api/?type=json&passage=random", name, function(data)
-		furrybot.send(data.text .. furrybot.colors.info .. "[" .. data.bookname .. " " .. data.chapter .. "," .. data.verse .. "]", furrybot.colors.fun)
-	end)
-end
-
-function furrybot.commands.define(name, word)
-	if word then
-		furrybot.json_http_request("https://api.dictionaryapi.dev/api/v1/entries/en_US/" .. word:gsub("computer", "person"), name, function(data)
-			local meaning = data.meaning
-			local selected = meaning.abbreviation or meaning["cardinal number"] or meaning.exclamation or meaning.noun or meaning.verb or meaning.adjective or meaning["transitive verb"] or meaning.adverb or meaning["relative adverb"] or meaning.preposition
-			if not selected then
-				print(dump(meaning))
-				furrybot.error_message(name, "Error in parsing response")
-			else
-				furrybot.send(word:sub(1, 1):upper() .. word:sub(2, #word):lower() .. ": " .. furrybot.colors.fun .. selected[1].definition, furrybot.colors.info)
-			end
-		end)
-	else
-		furrybot.error_message(name, "You need to specify a word")
-	end
-end
-
-function furrybot.commands.insult(name, target)
-	if furrybot.online_or_error(name, target, true) then
-		furrybot.http_request("https://insult.mattbas.org/api/insult", name, function(data)
-			furrybot.ping_message(target, data, furrybot.colors.fun)
-		end)
-	end
-end
-
-function furrybot.commands.joke(name, first, last)
-	if not first then
-		first = "Chuck"
-		last = "Norris"
-	elseif not last then
-		last = ""
-	end
-	furrybot.json_http_request("http://api.icndb.com/jokes/random?firstName=" .. first .. "&lastName=" .. last, name, function(data)
-		local joke = data.value.joke:gsub("&quot;", "\""):gsub("  ", " ")
-		furrybot.send(joke, furrybot.colors.fun)
-	end)
-end
-
-function furrybot.commands.question(name)
-	furrybot.json_http_request("https://8ball.delegator.com/magic/JSON/anything", name, function(data)
-		furrybot.ping_message(name, data.magic.answer, furrybot.colors.fun)
-	end)
-end
-furrybot.commands["8ball"] = furrybot.commands.question
-
--- economy
-function furrybot.commands.money(name, target)
-	target = target or name
-	furrybot.ping_message(name, (target == name and "You have " or target .. " has ") .. furrybot.money(furrybot.get_money(target), furrybot.colors.system) .. ".", furrybot.colors.system)
-end
-furrybot.commands.balance = furrybot.commands.money
-
-function furrybot.commands.pay(name, target, number)
-	if furrybot.online_or_error(name, target) then
-		local money = tonumber(number or "")
-		if not money or money <= 0 or math.floor(money) ~= money then
-			furrybot.error_message(name, "Invalid amount of money")
-		else
-			if furrybot.take_money(name, money) then
-				furrybot.add_money(target, money)
-				furrybot.ping_message(target, name .. " has payed you " .. furrybot.money(money, furrybot.colors.system) .. ".", furrybot.colors.system)
-			else
-				furrybot.error_message(name, "You don't have enough money")
-			end
-		end
-	end
-end
-furrybot.unsafe_commands.pay = true
-
 -- send load message
 furrybot.send("FurryBot - " .. C("#170089") .. "https://github.com/EliasFleckenstein03/furrybot", furrybot.colors.system)
 
@@ -504,4 +206,9 @@ end
 
 return function(_http, _env, _storage)
 	http, env, storage = _http, _env, _storage
+
+	for _, f in ipairs {"nsfw", "roleplay", "death", "economy", "random", "http"} do
+		print(f)
+		env.loadfile("clientmods/furrybot/" .. f .. ".lua")()(http, env, storage)
+	end
 end
