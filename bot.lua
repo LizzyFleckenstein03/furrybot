@@ -162,11 +162,15 @@ end
 -- General purpose commands
 
 function furrybot.commands.help()
-	local keys = {}
-	for k in pairs(furrybot.commands) do
-		table.insert(keys, k)
+	local commands = {}
+
+	for cmd in pairs(furrybot.commands) do
+		table.insert(commands, cmd)
 	end
-	furrybot.send("Available commands: " .. table.concat(keys, ", "), furrybot.colors.system)
+
+	table.sort(commands)
+
+	furrybot.send("Available commands: " .. table.concat(commands, ", "), furrybot.colors.system)
 end
 
 function furrybot.commands.accept(name)

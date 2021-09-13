@@ -77,6 +77,33 @@ function furrybot.commands.german(name)
 	furrybot.ping_message(name, msg:sub(1, stripe) .. C("red") .. msg:sub(stripe + 1, stripe * 2) .. C("yellow") .. msg:sub(stripe * 2 + 1, #msg), C("black"))
 end
 
+function furrybot.commands.color(name)
+	local color = string.format("#%06x", math.random(16777216) - 1):upper()
+
+	furrybot.ping_message(name, "Here's your color: " .. C(color) .. color, furrybot.colors.system)
+end
+
+function furrybot.commands.book(name)
+	local books = {
+		"Johann Wolfgang von Goethe - Faust, Der Tragödie Erster Teil",
+		"Johann Wolfgang von Goethe - Faust, Der Tragödie Zweiter Teil",
+		"Karl Marx & Friedrich Engels - The Communist Manifesto",
+		"Brian Kernhigan & Dennis Ritchie - The C Programming Language",
+		"Heinrich Heine - Die Harzreise",
+		"Johann Wolfgang von Goethe - Die Leiden des jungen Werther",
+		"Friedrich Schiller - Die Jungfrau von Orleans",
+		"Theodor Fontane - Irrungen, Wirrungen",
+		"Friedrich Schiller - Die Räuber",
+		"Theodor Storm - Der Schimmelreiter",
+		"Josef von Eichendorff - Aus dem Leben eines Taugenichts",
+		"Richard Esplin - Advanced Linux Programming",
+		"Joey de Vries - Learn OpenGL",
+		"Gerard Beekmans - Linux From Scratch",
+	}
+
+	furrybot.ping_message(name, books[math.random(#books)], furrybot.colors.system)
+end
+
 return function(_http, _env, _storage)
 	http, env, storage = _http, _env, _storage
 end
