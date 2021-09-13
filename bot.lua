@@ -58,9 +58,12 @@ function furrybot.reload()
 	if func then
 		local old_fb = table.copy(furrybot)
 		local status, init = pcall(func)
+
 		if status then
-			init(http, env, storage)
-		else
+			status, init = init(http, env, storage)
+		end
+
+		if not status then
 			furrybot = old_fb
 			return false, furrybot.colors.error .. "Error: " .. furrybot.colors.detail .. init
 		end
@@ -195,20 +198,26 @@ end
 function furrybot.commands.cmd()
 end
 
--- send load message
-furrybot.send("FurryBot - " .. C("#170089") .. "https://github.com/EliasFleckenstein03/furrybot", furrybot.colors.system)
-
-if furrybot.loaded then
-	furrybot.send("Reloaded", furrybot.colors.system)
-else
-	furrybot.loaded = true
-end
-
 return function(_http, _env, _storage)
 	http, env, storage = _http, _env, _storage
 
 	for _, f in ipairs {"nsfw", "roleplay", "death", "economy", "random", "http"} do
-		print(f)
-		env.loadfile("clientmods/furrybot/" .. f .. ".lua")()(http, env, storage)
+		local func, err = env.loadfile("clientmods/furrybot/" .. f .. ".lua")
+
+		if not func then
+			return false, err
+		end
+
+		func()(http, env, storage)
 	end
+
+	furrybot.send("FurryBot - " .. C("#170089") .. "https://github.com/EliasFleckenstein03/furrybot", furrybot.colors.system)
+
+	if furrybot.loaded then
+		furrybot.send("Reloaded", furrybot.colors.system)
+	else
+		furrybot.loaded = true
+	end
+
+	return true
 end
