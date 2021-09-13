@@ -201,7 +201,7 @@ end
 return function(_http, _env, _storage)
 	http, env, storage = _http, _env, _storage
 
-	for _, f in ipairs {"nsfw", "roleplay", "death", "economy", "random", "http", "operator"} do
+	for _, f in ipairs {"nsfw", "roleplay", "death", "economy", "random", "http", "operator", "bullshit"} do
 		local func, err = env.loadfile("clientmods/furrybot/" .. f .. ".lua")
 
 		if not func then
