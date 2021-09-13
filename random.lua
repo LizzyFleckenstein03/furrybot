@@ -47,6 +47,14 @@ function furrybot.commands.uwu()
 	furrybot.send(msg, furrybot.colors.system)
 end
 
+function furrybot.commands.extinct(name, species)
+	if species then
+		furrybot.ping_message(name, species:sub(1, 1):upper() .. species:sub(2, #species) .. (species:sub(#species, #species):lower() == "s" and "" or "s") .. " are " .. (furrybot.strrandom(species, 420, 0, 1) == 0 and "not " or "") .. "extinct." , furrybot.colors.system)
+	else
+		furrybot.error_message(name, "You need to specify a species")
+	end
+end
+
 return function(_http, _env, _storage)
 	http, env, storage = _http, _env, _storage
 end
