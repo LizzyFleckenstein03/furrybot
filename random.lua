@@ -55,6 +55,28 @@ function furrybot.commands.extinct(name, species)
 	end
 end
 
+function furrybot.commands.german(name)
+	local messages = {
+		"Schnauze!",
+		"Sprich Deutsch, du Hurensohn!",
+		"NEIN NEIN NEIN NEIN NEIN NEIN",
+		"Deine Mutter",
+		"Das war ein BEFEHL!",
+		"Das bleibt hier alles so wie das hier ist!",
+		"Scheißße",
+		"Digga was falsch bei dir",
+		"Lass mich deine Arschfalten sehen",
+		"Krieg mal deinen Ödipuskomplex unter Kontrolle",
+		"Meine Nudel ist 30cm lang und al dente",
+		"Wie die Nase eines Mannes, so auch sein Johannes.",
+	}
+
+	local msg = messages[math.random(#messages)]
+	local stripe = math.floor(#msg / 3)
+
+	furrybot.ping_message(name, msg:sub(1, stripe) .. C("red") .. msg:sub(stripe + 1, stripe * 2) .. C("yellow") .. msg:sub(stripe * 2 + 1, #msg), C("black"))
+end
+
 return function(_http, _env, _storage)
 	http, env, storage = _http, _env, _storage
 end
