@@ -52,19 +52,23 @@ furrybot.deathmessages = {
 	"%s went off with a bang",
 }
 
-function furrybot.commands.kill(name, target)
-	if furrybot.online_or_error(name, target, true) then
-		if name == target then
-			furrybot.send(string.format("%s died due to lack of friends", target), furrybot.colors.roleplay)
-		else
-			furrybot.send(string.format(furrybot.kill_deathmessages[math.random(#furrybot.kill_deathmessages)], target, name), furrybot.colors.roleplay)
+furrybot.commands.kill = {
+	func = function(name, target)
+		if furrybot.online_or_error(name, target, true) then
+			if name == target then
+				furrybot.send(string.format("%s died due to lack of friends", target), furrybot.colors.roleplay)
+			else
+				furrybot.send(string.format(furrybot.kill_deathmessages[math.random(#furrybot.kill_deathmessages)], target, name), furrybot.colors.roleplay)
+			end
 		end
-	end
-end
+	end,
+}
 
-function furrybot.commands.die(name)
-	furrybot.send(string.format(furrybot.deathmessages[math.random(#furrybot.deathmessages)], name), furrybot.colors.roleplay)
-end
+furrybot.commands.die = {
+	func = function(name)
+		furrybot.send(string.format(furrybot.deathmessages[math.random(#furrybot.deathmessages)], name), furrybot.colors.roleplay)
+	end,
+}
 
 return function(_http, _env, _storage)
 	http, env, storage = _http, _env, _storage

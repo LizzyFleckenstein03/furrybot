@@ -53,11 +53,14 @@ END {
 }
 ]]
 
-function furrybot.commands.bullshit(name)
-	local pf = env.io.popen("awk '" .. bullshit_code .. "' clientmods/furrybot/bullshit", "r")
-	local bullshit = pf:read("*a")
-	furrybot.ping_message(name, bullshit:sub(1, #bullshit - 2), furrybot.colors.system)
-end
+furrybot.commands.bullshit = {
+	help = "Output some random bullshit (ported from the plan9front system)",
+	func = function(name)
+		local pf = env.io.popen("awk '" .. bullshit_code .. "' clientmods/furrybot/bullshit", "r")
+		local bullshit = pf:read("*a")
+		furrybot.send(bullshit:sub(1, #bullshit - 2), furrybot.colors.system)
+	end,
+}
 
 return function(_http, _env, _storage)
 	http, env, storage = _http, _env, _storage

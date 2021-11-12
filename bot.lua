@@ -1,6 +1,5 @@
 furrybot.commands = {}
 furrybot.requests = {}
-furrybot.unsafe_commands = {}
 
 local http, env, storage
 local C = minetest.get_color_escape_sequence
@@ -19,7 +18,6 @@ furrybot.colors = {
 }
 
 -- helper functions
-
 function furrybot.send(msg, color)
 	minetest.send_chat_message("/me " .. furrybot.colors.braces .. "[" .. color .. msg .. furrybot.colors.braces .. "]")
 end
@@ -40,12 +38,15 @@ function furrybot.parse_message(player, message, discord)
 	if message:find("!") == 1 and not furrybot.ignored[player] then
 		local args = message:sub(2, #message):split(" ")
 		local cmd = table.remove(args, 1)
-		local func = furrybot.commands[cmd]
-		if func then
-			if furrybot.unsafe_commands[cmd] and discord then
+		local def = furrybot.commands[cmd]
+
+		if def then
+			if (def.unsafe or def.operator) and discord then
 				furrybot.error_message(player, "Sorry, you cannot run this command from discord: ", cmd)
-			else
-				func(player, unpack(args))
+			elseif def.operator and not furrybot.is_operator(player) then
+				furrybot.error_message(player, "Sorry, you need to be an operator run this command: ", cmd)
+			elseif not def.ignore then
+				def.func(player, unpack(args))
 			end
 		else
 			furrybot.error_message(player, "Invalid command", cmd)
@@ -134,78 +135,153 @@ function furrybot.repeat_string(str, times)
 	return msg
 end
 
-function furrybot.interactive_roleplay_command(action)
-	return function(name, target)
-		if furrybot.online_or_error(name, target) then
-			furrybot.send(name .. " " .. action .. " " .. target .. ".", furrybot.colors.roleplay)
+function furrybot.uppercase(str)
+	return str:sub(1, 1):upper() .. str:sub(2, #str)
+end
+
+function furrybot.interactive_roleplay_command(cmd, action)
+	furrybot.commands[cmd] = {
+		params = "<player>",
+		help = furrybot.uppercase(cmd) .. " another player",
+		func = function(name, target)
+			if furrybot.online_or_error(name, target) then
+				furrybot.send(name .. " " .. action .. " " .. target .. ".", furrybot.colors.roleplay)
+			end
+		end,
+	}
+end
+
+function furrybot.solo_roleplay_command(cmd, action, help)
+	furrybot.commands[cmd] = {
+		help = furrybot.uppercase(cmd),
+		func = function(name)
+			furrybot.send(name .. " " .. action .. ".", furrybot.colors.roleplay)
+		end,
+	}
+end
+
+function furrybot.request_command(cmd, help, on_request, on_accept, unsafe)
+	furrybot.commands[cmd] = {
+		unsafe = true,
+		params = "<player>",
+		help = "Request to " .. help,
+		func = function(name, target)
+			if furrybot.online_or_error(name, target) and on_request(name, target) ~= false then
+				furrybot.requests[target] = {
+					origin = name,
+					func = on_accept,
+				}
+			end
+		end,
+	}
+end
+
+function furrybot.is_operator(name)
+	return name == minetest.localplayer:get_name() or furrybot.operators[name]
+end
+
+function furrybot.list_change_command(cmd, list_name, title, status)
+	furrybot.commands[cmd] = {
+		operator = true,
+		func = function(name, target)
+			if target then
+				if furrybot[list_name][target] == status then
+					furrybot.error_message(name, "Player " .. (status and "already" or "not") .. " " .. title .. ": ", target)
+				else
+					furrybot[list_name][target] = status
+					storage:set_string(list_name, minetest.serialize(furrybot[list_name]))
+					furrybot.ping_message(name, "Successfully " .. cmd .. (cmd:sub(#cmd, #cmd) == "e" and "" or "e") .. "d " .. target, furrybot.colors.system)
+				end
+			else
+				furrybot.error_message(name, "You need to specify a player")
+			end
+		end,
+	}
+end
+
+function furrybot.list_command(cmd, list_name, title)
+	furrybot.commands[cmd] = {
+		func = function()
+			local names = {}
+
+			for name in pairs(furrybot[list_name]) do
+				table.insert(names, name)
+			end
+
+			furrybot.send("List of " .. title .. ": " .. table.concat(names, ", "), furrybot.colors.system)
+		end,
+	}
+end
+
+furrybot.commands.cmd = {
+	ignore = true,
+}
+
+furrybot.commands.status = {
+	ignore = true,
+}
+
+furrybot.commands.help = {
+	params = "[<command>]",
+	help = "Display help for a commands or show list of available commands",
+	func = function(name, command)
+		if command then
+			local def = furrybot.commands[command]
+
+			if def then
+				furrybot.send("!" .. command .. (def.params and " " .. def.params or "") .. ": " .. (def.help or "No description given"), furrybot.colors.system)
+			else
+				furrybot.error_message(name, "Invalid command", command)
+			end
+		else
+			local commands = {}
+
+			for cmd in pairs(furrybot.commands) do
+				table.insert(commands, cmd)
+			end
+
+			table.sort(commands)
+
+			furrybot.send("Available commands: " .. table.concat(commands, ", "), furrybot.colors.system)
 		end
-	end
-end
+	end,
+}
 
-function furrybot.solo_roleplay_command(action)
-	return function(name)
-		furrybot.send(name .. " " .. action .. ".", furrybot.colors.roleplay)
-	end
-end
-
-function furrybot.request_command(on_request, on_accept)
-	return function(name, target)
-		if furrybot.online_or_error(name, target) and on_request(name, target) ~= false then
-			furrybot.requests[target] = {
-				origin = name,
-				func = on_accept,
-			}
+furrybot.commands.accept = {
+	unsafe = true,
+	help = "Accept a request",
+	func = function(name)
+		local tbl = furrybot.requests[name]
+		if tbl then
+			furrybot.requests[name] = nil
+			tbl.func(tbl.origin, name)
+		else
+			furrybot.error_message(name, "Nothing to accept")
 		end
-	end
-end
+	end,
+}
 
--- General purpose commands
-
-function furrybot.commands.help()
-	local commands = {}
-
-	for cmd in pairs(furrybot.commands) do
-		table.insert(commands, cmd)
-	end
-
-	table.sort(commands)
-
-	furrybot.send("Available commands: " .. table.concat(commands, ", "), furrybot.colors.system)
-end
-
-function furrybot.commands.accept(name)
-	local tbl = furrybot.requests[name]
-	if tbl then
-		furrybot.requests[name] = nil
-		tbl.func(tbl.origin, name)
-	else
-		furrybot.error_message(name, "Nothing to accept")
-	end
-end
-furrybot.unsafe_commands.accept = true
-
-function furrybot.commands.deny(name)
-	local tbl = furrybot.requests[name]
-	if tbl then
-		furrybot.requests[name] = nil
-		furrybot.ping_message(name, "Denied request", furrybot.colors.system)
-	else
-		furrybot.error_message(name, "Nothing to deny")
-	end
-end
-furrybot.unsafe_commands.deny = true
-
--- don't bug players that are running ClamityBot commands from discord
-function furrybot.commands.status()
-end
-
-function furrybot.commands.cmd()
-end
+furrybot.commands.deny = {
+	unsafe = true,
+	help = "Deny a request",
+	func = function(name)
+		local tbl = furrybot.requests[name]
+		if tbl then
+			furrybot.requests[name] = nil
+			furrybot.ping_message(name, "Denied request", furrybot.colors.system)
+		else
+			furrybot.error_message(name, "Nothing to deny")
+		end
+	end,
+}
 
 return function(_http, _env, _storage)
 	http, env, storage = _http, _env, _storage
 
-	for _, f in ipairs {"nsfw", "roleplay", "death", "economy", "random", "http", "operator", "bullshit"} do
+	furrybot.operators = minetest.deserialize(storage:get_string("operators")) or {}
+	furrybot.ignored = minetest.deserialize(storage:get_string("ignored")) or {}
+
+	for _, f in ipairs {"nsfw", "roleplay", "death", "economy", "random", "http", "operator", "bullshit", "marriage", "waifu"} do
 		local func, err = env.loadfile("clientmods/furrybot/" .. f .. ".lua")
 
 		if not func then
