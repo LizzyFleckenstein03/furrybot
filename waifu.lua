@@ -1,24 +1,40 @@
 local http, env, storage
 local C = minetest.get_color_escape_sequence
 
-furrybot.alphabeth = {
-	vowels = {},
-	consonants = {},
+furrybot.hiragana = {
+	map = {},
+	probability = {},
 }
 
 function furrybot.get_waifu_name()
-	local state = math.random() < 0.5
-	local r = math.random(3, 8)
-	local str = ""
+	local r = math.floor(1
+		+ math.random()
+		+ math.random()
+		+ math.random()
+		+ math.random()
+		+ math.random()
+	)
+
+	local jp = ""
 
 	for i = 1, r do
-		local tbl = state and furrybot.alphabeth.vowels or furrybot.alphabeth.consonants
-		str = str .. tbl[math.random(#tbl)]
-
-		state = not state
+		jp = jp .. furrybot.hiragana.list[math.random(#furrybot.hiragana.list)]
 	end
 
-	return furrybot.uppercase(str)
+	local en = ""
+
+	for i = 1, r do
+		local combo = furrybot.hiragana.map[utf8.sub(jp, i, i + 1)]
+
+		if combo then
+			en = en .. combo
+			i = i + 1
+		else
+			en = en .. furrybot.hiragana.map[utf8.sub(jp, i, i)]
+		end
+	end
+
+	return jp .. " (" .. furrybot.uppercase(en) .. ")"
 end
 
 function furrybot.random_distribution(tbl)
@@ -129,24 +145,24 @@ furrybot.commands.waifu = {
 return function(_http, _env, _storage)
 	http, env, storage = _http, _env, _storage
 
-	local is_vowel = {
-		a = true,
-		e = true,
-		i = true,
-		o = true,
-		u = true,
-	}
+	local function read_file(path)
+		local f = env.io.open("clientmods/furrybot/" .. path, "r")
+		local data = f:read("*a")
+		f:close()
 
-	local bounds = "az"
+		return data
+	end
 
-	local f = env.io.open("clientmods/furrybot/LICENSE", "r")
-	local src = f:read("*a")
+	furrybot.hiragana.map = minetest.deserialize(read_file("hiragana"))
+	furrybot.hiragana.list = {}
+
+	local src = read_file("Japanese-Lipsum.txt")
 
 	for i = 1, #src do
-		local c = src:sub(i, i):lower()
+		local c = utf8.sub(src, i, i)
 
-		if c:byte(1) >= bounds:byte(1) and c:byte(1) <= bounds:byte(2) then
-			table.insert(is_vowel[c] and furrybot.alphabeth.vowels or furrybot.alphabeth.consonants, c)
+		if furrybot.hiragana.map[c] then
+			table.insert(furrybot.hiragana.list, c)
 		end
 	end
 end
